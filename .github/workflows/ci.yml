@@ -1,0 +1,61 @@
+name: CI - Build and Package
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-package:
+    name: Build and Package Node.js App
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Create deployment package
+        run: |
+          mkdir -p dist
+          cp -r server.js package.json package-lock.json node_modules dist/
+          cd dist
+          zip -r ../tf-demo-node-hello-world-${{ github.sha }}.zip .
+      
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_HCPTFDEMO_CREDENTIALS }}
+      
+      - name: Upload package to Azure Blob Storage
+        run: |
+          # Upload with commit SHA for traceability
+          az storage blob upload \
+            --account-name ${{ secrets.AZURE_HCPTFDEMO_STORAGE_ACCOUNT }} \
+            --container-name build-artifacts \
+            --name tf-demo-node-hello-world/tf-demo-node-hello-world-${{ github.sha }}.zip \
+            --file tf-demo-node-hello-world-${{ github.sha }}.zip \
+            --overwrite
+          
+          # Upload as 'latest' for easy CD pipeline consumption
+          az storage blob upload \
+            --account-name ${{ secrets.AZURE_HCPTFDEMO_STORAGE_ACCOUNT }} \
+            --container-name build-artifacts \
+            --name tf-demo-node-hello-world/tf-demo-node-hello-world-latest.zip \
+            --file tf-demo-node-hello-world-${{ github.sha }}.zip \
+            --overwrite
+          
+          echo "Package uploaded: tf-demo-node-hello-world-${{ github.sha }}.zip"
+          echo "Latest alias: https://${{ secrets.AZURE_HCPTFDEMO_STORAGE_ACCOUNT }}.blob.core.windows.net/build-artifacts/tf-demo-node-hello-world/tf-demo-node-hello-world-latest.zip"
