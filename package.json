@@ -1,0 +1,15 @@
+{
+  "name": "tf-demo-node-hello-world",
+  "version": "1.0.0",
+  "description": "Simple Node.js hello world app for Azure App Service",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
