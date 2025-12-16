@@ -4,7 +4,7 @@ const port = process.env.PORT || 8080;
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Hello World from Node.js!',
+    message: 'Hello Mia-Platform from Node.js!',
     timestamp: new Date().toISOString(),
     version: '1.0.0'
   });
